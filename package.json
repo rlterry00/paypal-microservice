@@ -1,0 +1,19 @@
+{
+  "name": "paypal-microservice",
+  "version": "1.0.0",
+  "description": "Microservice for Penny Bank and Pay Pal API",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rlterry00/paypal-microservice.git"
+  },
+  "author": "Ramon Terry",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rlterry00/paypal-microservice/issues"
+  },
+  "homepage": "https://github.com/rlterry00/paypal-microservice#readme"
+}
