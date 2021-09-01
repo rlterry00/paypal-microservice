@@ -1,5 +1,10 @@
+"use strict";
+const axios = require("axios").default;
+
+
+
 module.exports = function (app) {
-  app.get("/url", (req, res, next) => {
-    res.json(["Tony", "Lisa", "Michael", "Ginger", "Food"]);
+  app.post("/pennybankplus/subscribed", (req, res, next) => {
+    res.send(req.body);
   });
 };
