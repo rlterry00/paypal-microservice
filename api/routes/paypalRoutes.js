@@ -8,32 +8,22 @@ module.exports = function (app) {
   app.post("/pennybankplus/subscribed", (req, res, next) => {
     res.send(req.body);
     const getToken = async () => {
-      const params = new URLSearchParams();
-      params.append("grant_type", "client_credentials");
-      axios
-        .post(
-          paypalTokenURL,
-          {
-            headers: {
-              Accept: "application/json",
-              "Accept-Language": "en_US",
-              "content-type": "application/x-www-form-urlencoded",
-            },
-          },
-          {
-            auth: {
-              username: clientId,
-              password: secret,
-            },
-          },
-          {
-            params: {
-              grant_type: "client_credentials",
-            },
-          }
-        )
+      axios({
+        method: "post",
+        url: "https://api.sandbox.paypal.com/v1/oauth2/token",
+        data: "grant_type=client_credentials", // => this is mandatory x-www-form-urlencoded. DO NOT USE json format for this
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded", // => needed to handle data parameter
+          "Accept-Language": "en_US",
+        },
+        auth: {
+          username: clientId,
+          password: secret,
+        },
+      })
         .then((response) => {
-          console.log(response.data);
+          console.log(response.data.access_token);
         })
         .catch((error) => {
           console.log(error.response);
