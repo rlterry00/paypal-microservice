@@ -104,4 +104,55 @@ module.exports = function (app) {
     };
     getStatus();
   });
+
+  //Cancel a subscription by id
+  app.post("/api/pennybankplus/cancel", (req, res, next) => {
+    const subscriptionId = req.body.subscriptionId;
+    const getStatus = async () => {
+      axios({
+        method: "post",
+        url: paypalTokenURL,
+        data: "grant_type=client_credentials",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept-Language": "en_US",
+        },
+        auth: {
+          username: clientId,
+          password: secret,
+        },
+      })
+        .then((response) => {
+          console.log(response.data.access_token);
+          const token = response.data.access_token;
+          axios
+            .post(
+              subscriptionURL + "/" + subscriptionId + "/cancel",
+              {
+                reason: "Not satisfied with the service",
+              },
+              {
+                headers: {
+                  Accept: "application/json",
+                  Authorization: "Bearer " + token,
+                },
+              }
+            )
+            .then((response) => {
+              console.log(response.data);
+              res.send({
+                status: response,
+              });
+            })
+            .catch((error) => {
+              console.log(error.response);
+            });
+        })
+        .catch((error) => {
+          console.log(error.response);
+        });
+    };
+    getStatus();
+  });
 };
