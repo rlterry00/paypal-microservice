@@ -49,11 +49,19 @@ exports.create = (req, res, next) => {
             });
           })
           .catch((error) => {
-            console.log(error.response);
+              console.log(error.response);
+              res.send({
+                status: error.response.status,
+                error: error.response.statusText,
+              });
           });
       })
       .catch((error) => {
-        console.log(error.response);
+          console.log(error.response);
+          res.send({
+            status: error.response.status,
+            error: error.response.statusText,
+          });
       });
   };
   createSubsription();
