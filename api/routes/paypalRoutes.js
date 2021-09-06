@@ -13,5 +13,9 @@ module.exports = function (app) {
   );
 
   //Cancel a subscription by id
-  app.post("/api/pennybankplus/cancel", paypalControllers.cancel);
+  app.post(
+    "/api/pennybankplus/cancel",
+    body("subscriptionId").isLength({ min: 14, max: 14 }),
+    paypalControllers.cancel
+  );
 };

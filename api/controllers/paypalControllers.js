@@ -49,19 +49,19 @@ exports.create = (req, res, next) => {
             });
           })
           .catch((error) => {
-              console.log(error.response);
-              res.send({
-                status: error.response.status,
-                error: error.response.statusText,
-              });
+            console.log(error.response);
+            res.send({
+              status: error.response.status,
+              error: error.response.statusText,
+            });
           });
       })
       .catch((error) => {
-          console.log(error.response);
-          res.send({
-            status: error.response.status,
-            error: error.response.statusText,
-          });
+        console.log(error.response);
+        res.send({
+          status: error.response.status,
+          error: error.response.statusText,
+        });
       });
   };
   createSubsription();
@@ -114,10 +114,10 @@ exports.status = (req, res, next) => {
                   error: "Subscription ID no longer valid",
                 });
               } else {
-                  res.send({
-                    status: error.response.status,
-                    error: error.response.statusText,
-                  });
+                res.send({
+                  status: error.response.status,
+                  error: error.response.statusText,
+                });
               }
             });
         })
@@ -135,51 +135,71 @@ exports.status = (req, res, next) => {
 
 //Cancel a subscription by id
 exports.cancel = (req, res, next) => {
-  const subscriptionId = req.body.subscriptionId;
-  const getStatus = async () => {
-    axios({
-      method: "post",
-      url: paypalTokenURL,
-      data: "grant_type=client_credentials",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept-Language": "en_US",
-      },
-      auth: {
-        username: clientId,
-        password: secret,
-      },
-    })
-      .then((response) => {
-        console.log(response.data.access_token);
-        const token = response.data.access_token;
-        axios
-          .post(
-            subscriptionURL + "/" + subscriptionId + "/cancel",
-            {
-              reason: "Not satisfied with the service",
-            },
-            {
-              headers: {
-                Accept: "application/json",
-                Authorization: "Bearer " + token,
-              },
-            }
-          )
-          .then((response) => {
-            console.log(response.data);
-            res.send({
-              status: response,
-            });
-          })
-          .catch((error) => {
-            console.log(error.response);
-          });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  } else {
+    const subscriptionId = req.body.subscriptionId;
+    const getStatus = async () => {
+      axios({
+        method: "post",
+        url: paypalTokenURL,
+        data: "grant_type=client_credentials",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept-Language": "en_US",
+        },
+        auth: {
+          username: clientId,
+          password: secret,
+        },
       })
-      .catch((error) => {
-        console.log(error.response);
-      });
-  };
-  getStatus();
+        .then((response) => {
+          console.log(response.data.access_token);
+          const token = response.data.access_token;
+          axios
+            .post(
+              subscriptionURL + "/" + subscriptionId + "/cancel",
+              {
+                reason: "Not satisfied with the service",
+              },
+              {
+                headers: {
+                  Accept: "application/json",
+                  Authorization: "Bearer " + token,
+                },
+              }
+            )
+            .then((response) => {
+              console.log(response.data);
+              res.send({
+                status: response,
+              });
+            })
+            .catch((error) => {
+              console.log(error.response);
+              if (error.response.status == 404) {
+                res.send({
+                  status: error.response.status,
+                  error: "Subscription ID no longer valid or not active",
+                });
+              } else {
+                res.send({
+                  status: error.response.status,
+                  error: error.response.statusText,
+                });
+              }
+            });
+        })
+        .catch((error) => {
+          console.log(error.response);
+          res.send({
+            status: error.response.status,
+            error: error.response.statusText,
+          });
+        });
+    };
+    getStatus();
+  }
 };
