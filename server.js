@@ -42,19 +42,23 @@ routes(app);
 // };
 // startServer();
 
-app.use(function (err, req, res, next) {
-  console.log(err.stack);
-  res.status(500).send("Something broke!");
+app.use((req, res, next) => {
+    const err = new Error("Not Found")
+    err.status = 404;
+    next(err);
+});
+
+app.use((err, req, res, next) => {
+  console.log(err);
+  res.status(err.status || 500);
+  res.send({
+    status: err.status || 500,
+    message: err.message,
+  });
 });
 
 app.listen(port, () => {
   console.log(`app listening at http://localhost:${port}`);
 });
 
-app.get("/", (req, res) => {
-  res.send("WORKING!");
-});
 
-// app.use(function (req, res) {
-//   res.status(404).send(req.originalUrl + " 404 error not found");
-// });
