@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const paypalTokenURL = process.env.PAYPAL_TOKEN_URL;
 const subscriptionURL = process.env.PAYPAL_SUBSCRIPTION_URL;
 const checkFamilyURL = process.env.CHECK_FAMILY_URL;
+const updateSubscriberURL = process.env.UPDATE_SUBSCRIBER_URL;
 const clientId = process.env.CLIENT_ID;
 const secret = process.env.PAYPAL_SECRET;
 const planId = process.env.PLAN_ID;
@@ -40,6 +41,7 @@ exports.auth = (req, res, next) => {
 exports.create = (req, res, next) => {
   const authToken = req.headers.authorization;
   jwt.verify(authToken, authSecret, (err, decoded) => {
+    const pbToken = decoded.token;
     if (!err) {
       const createSubsription = async () => {
         axios({
@@ -74,6 +76,25 @@ exports.create = (req, res, next) => {
               )
               .then((response) => {
                 console.log(response.data);
+                axios
+                  .patch(
+                    updateSubscriberURL,
+                    {
+                      subscriberId: response.data.id,
+                    },
+                    {
+                      headers: {
+                        Authorization: pbToken,
+                      },
+                    }
+                  )
+                  .then((response) => {
+                    console.log(response.data);
+                  })
+                  .catch((error) => {
+                    console.log(error.response);
+                    
+                  });
                 res.send({
                   status: response.data.status,
                   subscriptionId: response.data.id,
