@@ -2,6 +2,9 @@ var paypalControllers = require("../controllers/paypalControllers");
 const { body } = require("express-validator");
 
 module.exports = function (app) {
+  //Create an auth JWT based on valid token from penny bank.
+  app.post("/api/pennybankplus/auth", paypalControllers.auth);
+
   //Create a new subscription and get id
   app.post("/api/pennybankplus/create/subscription", paypalControllers.create);
 

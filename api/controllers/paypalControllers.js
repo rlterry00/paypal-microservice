@@ -1,52 +1,93 @@
 "use strict";
 const axios = require("axios").default;
-const paypalTokenURL = process.env.PAYPAL_TOKEN_URL;
-const subscriptionURL = "https://api.paypal.com/v1/billing/subscriptions";
-const clientId = process.env.SANDBOX_CLIENT_ID;
-const secret = process.env.SANDBOX_SECRET;
-const planId = process.env.PLAN_ID;
 const { validationResult } = require("express-validator");
+const jwt = require("jsonwebtoken");
+const paypalTokenURL = process.env.PAYPAL_TOKEN_URL;
+const subscriptionURL = process.env.PAYPAL_SUBSCRIPTION_URL;
+const checkFamilyURL = process.env.CHECK_FAMILY_URL;
+const clientId = process.env.CLIENT_ID;
+const secret = process.env.PAYPAL_SECRET;
+const planId = process.env.PLAN_ID;
+const authSecret = process.env.AUTH_SECRET;
+
+//Create an auth JWT based on valid token from penny bank.
+exports.auth = (req, res, next) => {
+  const token = req.headers.authorization;
+  const userId = req.headers.userid;
+  const getFamilyURL = checkFamilyURL + userId;
+
+  axios
+    .get(getFamilyURL, {
+      headers: {
+        Authorization: token,
+      },
+    })
+    .then((response) => {
+      const authToken = jwt.sign({ token: token, userId: userId }, authSecret, {
+        expiresIn: 600,
+      });
+      res.send({
+        status: 200,
+        authToken: authToken,
+      });
+    })
+    .catch((error) => {
+      throw new Error(res.status(401).send("Token not valid"));
+    });
+};
 
 //Create a new subscription and get id
 exports.create = (req, res, next) => {
-  const createSubsription = async () => {
-    axios({
-      method: "post",
-      url: paypalTokenURL,
-      data: "grant_type=client_credentials",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept-Language": "en_US",
-      },
-      auth: {
-        username: clientId,
-        password: secret,
-      },
-    })
-      .then((response) => {
-        console.log(response.data.access_token);
-        const token = response.data.access_token;
-        axios
-          .post(
-            subscriptionURL,
-            {
-              plan_id: planId,
-            },
-            {
-              headers: {
-                Accept: "application/json",
-                Authorization: "Bearer " + token,
-              },
-            }
-          )
+  console.log("header", req.headers.authorization);
+  const authToken = req.headers.authorization;
+  jwt.verify(authToken, authSecret, (err, decoded) => {
+    if (!err) {
+      const createSubsription = async () => {
+        axios({
+          method: "post",
+          url: paypalTokenURL,
+          data: "grant_type=client_credentials",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept-Language": "en_US",
+          },
+          auth: {
+            username: clientId,
+            password: secret,
+          },
+        })
           .then((response) => {
-            console.log(response.data);
-            res.send({
-              status: response.data.status,
-              subscriptionId: response.data.id,
-              link: response.data.links[0].href,
-            });
+            console.log(response.data.access_token);
+            const token = response.data.access_token;
+            axios
+              .post(
+                subscriptionURL,
+                {
+                  plan_id: planId,
+                },
+                {
+                  headers: {
+                    Accept: "application/json",
+                    Authorization: "Bearer " + token,
+                  },
+                }
+              )
+              .then((response) => {
+                console.log(response.data);
+                res.send({
+                  status: response.data.status,
+                  subscriptionId: response.data.id,
+                  link: response.data.links[0].href,
+                });
+              })
+              .catch((error) => {
+                console.log(error.response);
+                res.send({
+                  status: error.response.status,
+                  error: error.response.statusText,
+                });
+              });
           })
           .catch((error) => {
             console.log(error.response);
@@ -55,16 +96,12 @@ exports.create = (req, res, next) => {
               error: error.response.statusText,
             });
           });
-      })
-      .catch((error) => {
-        console.log(error.response);
-        res.send({
-          status: error.response.status,
-          error: error.response.statusText,
-        });
-      });
-  };
-  createSubsription();
+      };
+      createSubsription();
+    } else {
+      throw new Error(res.status(401).send("Token not valid"));
+    }
+  });
 };
 
 //Check status of a subscription by id
