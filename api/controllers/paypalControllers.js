@@ -10,6 +10,8 @@ const clientId = process.env.CLIENT_ID;
 const secret = process.env.PAYPAL_SECRET;
 const planId = process.env.PLAN_ID;
 const authSecret = process.env.AUTH_SECRET;
+const pbCred = process.env.PB_CRED;
+const pbAuth = process.env.PB_AUTH;
 
 //Create an auth JWT based on valid token from penny bank.
 exports.auth = (req, res, next) => {
@@ -85,6 +87,8 @@ exports.create = (req, res, next) => {
                     {
                       headers: {
                         Authorization: pbToken,
+                        "Subsvr-Creds": pbCred,
+                        "Subsvr-Auth": pbAuth
                       },
                     }
                   )
