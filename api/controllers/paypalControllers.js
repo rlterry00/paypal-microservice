@@ -16,16 +16,19 @@ const pbAuth = process.env.PB_AUTH;
 //Create an auth JWT based on valid token from penny bank.
 exports.auth = (req, res, next) => {
   const token = req.headers.authorization;
-  const userId = req.headers.userid;
+  const userId= req.headers.userid;
   const getFamilyURL = checkFamilyURL + userId;
 
   axios
-    .get(getFamilyURL, {
+    .get(updateSubscriberURL + userId, {
       headers: {
         Authorization: token,
+        "Subsvr-Creds": pbCred,
+        "Subsvr-Auth": pbAuth,
       },
     })
     .then((response) => {
+      console.log(response.data);
       const authToken = jwt.sign({ token: token, userId: userId }, authSecret, {
         expiresIn: 600,
       });
@@ -35,7 +38,8 @@ exports.auth = (req, res, next) => {
       });
     })
     .catch((error) => {
-      throw new Error(res.status(401).send("Token not valid"));
+      console.log(error);
+      // throw new Error(res.status(401).send("Token not valid"));
     });
 };
 
@@ -44,6 +48,7 @@ exports.create = (req, res, next) => {
   const authToken = req.headers.authorization;
   jwt.verify(authToken, authSecret, (err, decoded) => {
     const pbToken = decoded.token;
+    const familyId = decoded.userId;
     if (!err) {
       const createSubsription = async () => {
         axios({
@@ -80,7 +85,7 @@ exports.create = (req, res, next) => {
                 console.log(response.data);
                 axios
                   .patch(
-                    updateSubscriberURL,
+                    updateSubscriberURL + familyId + "/update",
                     {
                       subscriberId: response.data.id,
                     },
@@ -88,7 +93,7 @@ exports.create = (req, res, next) => {
                       headers: {
                         Authorization: pbToken,
                         "Subsvr-Creds": pbCred,
-                        "Subsvr-Auth": pbAuth
+                        "Subsvr-Auth": pbAuth,
                       },
                     }
                   )
@@ -97,7 +102,6 @@ exports.create = (req, res, next) => {
                   })
                   .catch((error) => {
                     console.log(error.response);
-                    
                   });
                 res.send({
                   status: response.data.status,
