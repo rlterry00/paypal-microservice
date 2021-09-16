@@ -35,11 +35,17 @@ exports.auth = (req, res, next) => {
       res.send({
         status: 200,
         authToken: authToken,
+        subscription: response.data.subscriberId
       });
     })
     .catch((error) => {
       console.log(error);
       // throw new Error(res.status(401).send("Token not valid"));
+      res.send({
+        status: 404,
+        authToken: authToken,
+        message: "subscription id not found"
+      });
     });
 };
 
@@ -169,6 +175,7 @@ exports.status = (req, res, next) => {
                 })
                 .then((response) => {
                   console.log(response.data);
+                  //will need to update family model with subscriptionId in db
                   res.send({
                     status: response.data.status,
                     subscriptionId: response.data.id,
