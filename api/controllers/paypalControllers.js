@@ -190,10 +190,15 @@ exports.status = (req, res, next) => {
                     .utc(response.data.billing_info.next_billing_time)
                     .local()
                     .format("YYYY-MM-DDTHH:mm:ss");
+                  const nextBillingClient = moment
+                    .utc(response.data.billing_info.next_billing_time)
+                    .local()
+                    .format("MMMM Do, YYYY");
                   const activeFrom = moment
                     .utc(response.data.create_time)
                     .local()
                     .format("YYYY-MM-DDTHH:mm:ss");
+                  console.log(nextBilling, activeFrom);
                   if (response.data.status !== "APPROVAL_PENDING") {
                     axios
                       .patch(
@@ -204,8 +209,8 @@ exports.status = (req, res, next) => {
                           subscriberId: response.data.id,
                           planId: response.data.plan_id,
                           emailAddress: response.data.subscriber.email_address,
-                          // nextBillingTime: String(nextBilling),
-                          // activeFrom: String(activeFrom),
+                          nextBillingTime: nextBilling,
+                          activeFrom: activeFrom,
                         },
                         {
                           headers: {
@@ -226,6 +231,7 @@ exports.status = (req, res, next) => {
                   res.send({
                     status: response.data.status,
                     subscriptionId: response.data.id,
+                    nextBill: nextBillingClient
                   });
                 })
                 .catch((error) => {

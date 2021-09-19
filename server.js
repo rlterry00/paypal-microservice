@@ -31,16 +31,7 @@ app.use(bodyParser.json());
 var routes = require("./api/routes/paypalRoutes");
 routes(app);
 
-// const startServer = async () => {
-//   let ssl = await devcert.certificateFor("localhost");
 
-//   const server = https.createServer(ssl, app);
-
-//   server.listen(port, () => {
-//     console.log("listening on " + port);
-//   });
-// };
-// startServer();
 
 app.use((req, res, next) => {
     const err = new Error("Not Found")
@@ -62,3 +53,13 @@ app.listen(port, () => {
 });
 
 
+// const startServer = async () => {
+//   let ssl = await devcert.certificateFor("localhost");
+
+//   const server = https.createServer(ssl, app);
+
+//   server.listen(port, () => {
+//     console.log("listening on " + port);
+//   });
+// };
+// startServer();
