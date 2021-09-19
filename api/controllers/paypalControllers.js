@@ -272,6 +272,7 @@ exports.cancel = (req, res, next) => {
     return res.status(400).json({ errors: errors.array() });
   } else {
     const authToken = req.headers.authorization;
+    const reason = req.body.reason;
     jwt.verify(authToken, authSecret, (err, decoded) => {
       if (!err) {
         const subscriptionId = req.body.subscriptionId;
@@ -297,7 +298,7 @@ exports.cancel = (req, res, next) => {
                 .post(
                   subscriptionURL + "/" + subscriptionId + "/cancel",
                   {
-                    reason: "Not satisfied with the service",
+                    reason: "Reason not asked",
                   },
                   {
                     headers: {
@@ -307,24 +308,17 @@ exports.cancel = (req, res, next) => {
                   }
                 )
                 .then((response) => {
-                  console.log(response.data);
+                  //paypal doesnt send a response
                   res.send({
-                    status: response,
+                    status: "canceled",
                   });
                 })
                 .catch((error) => {
-                  console.log(error.response);
-                  if (error.response.status == 404) {
-                    res.send({
-                      status: error.response.status,
-                      error: "Subscription ID no longer valid or not active",
-                    });
-                  } else {
-                    res.send({
-                      status: error.response.status,
-                      error: error.response.statusText,
-                    });
-                  }
+                  //paypal doesnt send a response
+                  res.send({
+                    status: "canceled",
+                  });
+                  
                 });
             })
             .catch((error) => {
