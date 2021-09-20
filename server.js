@@ -2,12 +2,21 @@ require("dotenv").config();
 const fs = require("fs");
 // const key = fs.readFileSync("./key.pem");
 // const cert = fs.readFileSync("./cert.pem");
+const morgan = require("morgan");
 var cors = require("cors");
 var express = require("express");
 const https = require("https");
 const devcert = require("devcert");
-var app = express();
+const path = require("path");
+const app = express();
 port = process.env.PORT || 3000;
+
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, "./logs/access.log"),
+  { flags: "a" }
+);
+
+app.use(morgan("combined", { stream: accessLogStream }));
 
 app.use(
   cors({

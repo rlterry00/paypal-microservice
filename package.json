@@ -28,7 +28,9 @@
     "express-validator": "^6.12.1",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.1",
-    "pem": "^1.14.4"
+    "morgan": "^1.10.0",
+    "pem": "^1.14.4",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.12"
