@@ -1,5 +1,7 @@
 require("dotenv").config();
 const fs = require("fs");
+const winston = require("winston");
+const logger = require("./utils/logger.js");
 // const key = fs.readFileSync("./key.pem");
 // const cert = fs.readFileSync("./cert.pem");
 const morgan = require("morgan");
@@ -59,6 +61,7 @@ app.use((err, req, res, next) => {
 
 app.listen(port, () => {
   console.log(`app listening at http://localhost:${port}`);
+  logger.info(`Server started and running on http://localhost:${port}`);
 });
 
 
