@@ -298,7 +298,7 @@ exports.cancel = (req, res, next) => {
                 .post(
                   subscriptionURL + "/" + subscriptionId + "/cancel",
                   {
-                    reason: "Reason not asked",
+                    reason: req.body.reason,
                   },
                   {
                     headers: {
