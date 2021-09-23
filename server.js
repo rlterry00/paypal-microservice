@@ -1,7 +1,6 @@
 require("dotenv").config();
 const fs = require("fs");
 const winston = require("winston");
-const logger = require("./utils/logger.js");
 // const key = fs.readFileSync("./key.pem");
 // const cert = fs.readFileSync("./cert.pem");
 const morgan = require("morgan");
@@ -12,13 +11,34 @@ const devcert = require("devcert");
 const path = require("path");
 const app = express();
 port = process.env.PORT || 3000;
+const { createLogger, transports } = require("winston");
+require("winston-daily-rotate-file");
 
-const accessLogStream = fs.createWriteStream(
-  path.join(__dirname, "./logs/access.log"),
-  { flags: "a" }
+
+
+const logger = createLogger({
+  level: "info",
+  transports: [
+    new transports.DailyRotateFile({
+      filename: "./logs/info-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      zippedArchive: true,
+      format: winston.format.combine(
+        winston.format.timestamp({ format: "MMM-DD-YYYY HH:mm:ss" }),
+        winston.format.align(),
+        winston.format.printf(
+          (info) => `${info.level}: ${[info.timestamp]}: ${info.message}`
+        )
+      ),
+    }),
+  ],
+});
+
+
+
+app.use(
+  morgan("combined", { stream: { write: (message) => logger.info(message) } })
 );
-
-app.use(morgan("combined", { stream: accessLogStream }));
 
 app.use(
   cors({

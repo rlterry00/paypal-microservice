@@ -13,14 +13,34 @@ const authSecret = process.env.AUTH_SECRET;
 const pbCred = process.env.PB_CRED;
 const pbAuth = process.env.PB_AUTH;
 const moment = require("moment");
-const logger = require("../../utils/logger"); 
+const winston = require("winston");
+const { createLogger, transports } = require("winston");
+require("winston-daily-rotate-file");
+
+const logger = createLogger({
+  level: "info",
+  transports: [
+    new transports.DailyRotateFile({
+      filename: "./logs/info-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      zippedArchive: true,
+      format: winston.format.combine(
+        winston.format.timestamp({ format: "MMM-DD-YYYY HH:mm:ss" }),
+        winston.format.align(),
+        winston.format.printf(
+          (info) => `${info.level}: ${[info.timestamp]}: ${info.message}`
+        )
+      ),
+    }),
+  ],
+});
 
 //Create an auth JWT based on valid token from penny bank.
 exports.auth = (req, res, next) => {
   const token = req.headers.authorization;
   const userId = req.headers.userid;
   const getFamilyURL = checkFamilyURL + userId;
-  logger.info(`Test log on auth`);
+  
 
   axios
     .get(updateSubscriberURL + userId, {
@@ -36,12 +56,14 @@ exports.auth = (req, res, next) => {
         expiresIn: 600,
       });
       if (response.data.subscriberId) {
+        logger.info(`successful auth`);
         res.send({
           status: 200,
           authToken: authToken,
           subscription: response.data.subscriberId,
         });
       } else {
+        logger.info(`no subscription id`);
         res.send({
           status: 404,
           authToken: authToken,
@@ -52,6 +74,7 @@ exports.auth = (req, res, next) => {
     .catch((error) => {
       console.log(error);
       // throw new Error(res.status(401).send("Token not valid"));
+      logger.info(`error no subscription id`);
       res.send({
         status: 404,
         authToken: authToken,
@@ -85,6 +108,7 @@ exports.create = (req, res, next) => {
           .then((response) => {
             console.log(response.data.access_token);
             const token = response.data.access_token;
+            logger.info(`token swap`);
             axios
               .post(
                 subscriptionURL,
@@ -100,6 +124,7 @@ exports.create = (req, res, next) => {
               )
               .then((response) => {
                 console.log(response.data);
+                logger.info(`new subscription created`);
                 axios
                   .patch(
                     updateSubscriberURL + familyId + "/update",
@@ -116,9 +141,11 @@ exports.create = (req, res, next) => {
                   )
                   .then((response) => {
                     console.log(response.data);
+                    logger.info(`PB updated`);
                   })
                   .catch((error) => {
                     console.log(error.response);
+                    logger.info(`PB error`);
                   });
                 res.send({
                   status: response.data.status,
@@ -128,6 +155,7 @@ exports.create = (req, res, next) => {
               })
               .catch((error) => {
                 console.log(error.response);
+                logger.info(`subscription creation error`);
                 res.send({
                   status: error.response.status,
                   error: error.response.statusText,
@@ -136,6 +164,7 @@ exports.create = (req, res, next) => {
           })
           .catch((error) => {
             console.log(error.response);
+            logger.info(`subscription creation error`);
             res.send({
               status: error.response.status,
               error: error.response.statusText,
@@ -145,6 +174,7 @@ exports.create = (req, res, next) => {
       createSubsription();
     } else {
       throw new Error(res.status(401).send("Token not valid"));
+      
     }
   });
 };
@@ -177,6 +207,7 @@ exports.status = (req, res, next) => {
             },
           })
             .then((response) => {
+              logger.info(`Token swap`);
               console.log(response.data.access_token);
               const token = response.data.access_token;
               axios
@@ -200,6 +231,8 @@ exports.status = (req, res, next) => {
                     .utc(response.data.create_time)
                     .local()
                     .format("YYYY-MM-DDTHH:mm:ss");
+                  const status = response.data.status;
+                  const subscriberId = response.data.id;
                   console.log(nextBilling, activeFrom);
                   if (response.data.status !== "APPROVAL_PENDING") {
                     axios
@@ -224,20 +257,25 @@ exports.status = (req, res, next) => {
                       )
                       .then((response) => {
                         console.log(response.data);
+                        logger.info(`updated model`);
+                        res.send({
+                          status: status,
+                          subscriptionId: subscriberId,
+                          nextBill: nextBillingClient,
+                          trial: response.data.trial
+                        });
                       })
                       .catch((error) => {
                         console.log(error.response);
+                        logger.info(`error updating model`);
                       });
                   }
 
-                  res.send({
-                    status: response.data.status,
-                    subscriptionId: response.data.id,
-                    nextBill: nextBillingClient
-                  });
+                  
                 })
                 .catch((error) => {
                   console.log(error.response);
+                  logger.info(`error, subscriber id not found`);
                   // if (error.response.status == 404) {
                   //   res.send({
                   //     status: error.response.status,
@@ -252,6 +290,7 @@ exports.status = (req, res, next) => {
                 });
             })
             .catch((error) => {
+              logger.info(`error getting status`);
               console.log(error.response);
               res.send({
                 status: error.response.status,
@@ -294,6 +333,7 @@ exports.cancel = (req, res, next) => {
             },
           })
             .then((response) => {
+              logger.info(`token swap`);
               console.log(response.data.access_token);
               const token = response.data.access_token;
               axios
@@ -311,12 +351,14 @@ exports.cancel = (req, res, next) => {
                 )
                 .then((response) => {
                   //paypal doesnt send a response
+                  logger.info(`canceled`);
                   res.send({
                     status: "canceled",
                   });
                 })
                 .catch((error) => {
                   //paypal doesnt send a response
+                  logger.info(`canceled`);
                   res.send({
                     status: "canceled",
                   });
@@ -324,6 +366,7 @@ exports.cancel = (req, res, next) => {
                 });
             })
             .catch((error) => {
+              logger.info(`error canceling`);
               console.log(error.response);
               res.send({
                 status: error.response.status,

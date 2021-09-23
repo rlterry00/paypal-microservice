@@ -30,7 +30,8 @@
     "moment": "^2.29.1",
     "morgan": "^1.10.0",
     "pem": "^1.14.4",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.5"
   },
   "devDependencies": {
     "nodemon": "^2.0.12"
