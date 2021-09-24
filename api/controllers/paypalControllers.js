@@ -273,6 +273,11 @@ exports.status = (req, res, next) => {
                         console.log(error.response);
                         logger.info(`error updating model`);
                       });
+                  } else {
+                    res.send({
+                      status: status,
+                      
+                    });
                   }
 
                   
