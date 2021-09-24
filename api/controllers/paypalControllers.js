@@ -51,7 +51,7 @@ exports.auth = (req, res, next) => {
       },
     })
     .then((response) => {
-      console.log(response.data);
+      console.log("this is from auth", response.data);
       const authToken = jwt.sign({ token: token, userId: userId }, authSecret, {
         expiresIn: 600,
       });
