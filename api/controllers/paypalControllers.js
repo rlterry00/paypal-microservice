@@ -276,17 +276,17 @@ exports.status = (req, res, next) => {
                 .catch((error) => {
                   console.log(error.response);
                   logger.info(`error, subscriber id not found`);
-                  // if (error.response.status == 404) {
-                  //   res.send({
-                  //     status: error.response.status,
-                  //     error: "Subscription ID no longer valid",
-                  //   });
-                  // } else {
-                  //   res.send({
-                  //     status: error.response.status,
-                  //     error: error.response.statusText,
-                  //   });
-                  // }
+                  if (error.response.status == 404) {
+                    res.send({
+                      status: error.response.status,
+                      error: "Subscription ID no longer valid",
+                    });
+                  } else {
+                    res.send({
+                      status: error.response.status,
+                      error: error.response.statusText,
+                    });
+                  }
                 });
             })
             .catch((error) => {
