@@ -219,22 +219,26 @@ exports.status = (req, res, next) => {
                 })
                 .then((response) => {
                   console.log(response.data);
-                  const nextBilling = moment
-                    .utc(response.data.billing_info.next_billing_time)
-                    .local()
-                    .format("YYYY-MM-DDTHH:mm:ss");
-                  const nextBillingClient = moment
-                    .utc(response.data.billing_info.next_billing_time)
-                    .local()
-                    .format("MMMM Do, YYYY");
+                  
+                    
+                  
                   const activeFrom = moment
                     .utc(response.data.create_time)
                     .local()
                     .format("YYYY-MM-DDTHH:mm:ss");
                   const status = response.data.status;
                   const subscriberId = response.data.id;
-                  console.log(nextBilling, activeFrom);
+                  
                   if (response.data.status !== "APPROVAL_PENDING") {
+                    const nextBilling = moment
+                      .utc(response.data.billing_info.next_billing_time)
+                      .local()
+                      .format("YYYY-MM-DDTHH:mm:ss");
+                    const nextBillingClient = moment
+                      .utc(response.data.billing_info.next_billing_time)
+                      .local()
+                      .format("MMMM Do, YYYY");
+                    console.log(nextBilling, activeFrom);
                     axios
                       .patch(
                         updateSubscriberURL + familyId + "/update",
@@ -243,8 +247,8 @@ exports.status = (req, res, next) => {
                             response.data.status == "ACTIVE" ? true : false,
                           subscriberId: response.data.id,
                           planId: response.data.plan_id,
-                          emailAddress: response.data.subscriber.email_address,
-                          nextBillingTime: nextBilling,
+                          emailAddress: response.data.status == "ACTIVE" ? response.data.subscriber.email_address : "",
+                          nextBillingTime: response.data.status == "ACTIVE" ? nextBilling : "",
                           activeFrom: activeFrom,
                         },
                         {
@@ -274,7 +278,7 @@ exports.status = (req, res, next) => {
                   
                 })
                 .catch((error) => {
-                  console.log(error.response);
+                  console.log(error);
                   logger.info(`error, subscriber id not found`);
                   if (error.response.status == 404) {
                     res.send({
