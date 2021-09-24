@@ -79,19 +79,19 @@ app.use((err, req, res, next) => {
   });
 });
 
-// app.listen(port, () => {
-//   console.log(`app listening at http://localhost:${port}`);
-//   logger.info(`Server started and running on http://localhost:${port}`);
-// });
+app.listen(port, () => {
+  console.log(`app listening at http://localhost:${port}`);
+  logger.info(`Server started and running on http://localhost:${port}`);
+});
 
 
-const startServer = async () => {
-  let ssl = await devcert.certificateFor("localhost");
+// const startServer = async () => {
+//   let ssl = await devcert.certificateFor("localhost");
 
-  const server = https.createServer(ssl, app);
+//   const server = https.createServer(ssl, app);
 
-  server.listen(port, () => {
-    console.log("listening on " + port);
-  });
-};
-startServer();
+//   server.listen(port, () => {
+//     console.log("listening on " + port);
+//   });
+// };
+// startServer();
