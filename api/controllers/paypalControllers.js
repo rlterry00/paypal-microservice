@@ -8,6 +8,7 @@ const checkFamilyURL = process.env.CHECK_FAMILY_URL;
 const updateSubscriberURL = process.env.UPDATE_SUBSCRIBER_URL;
 const clientId = process.env.CLIENT_ID;
 const secret = process.env.PAYPAL_SECRET;
+const trialPlanId = process.env.TRIAL_PLAN_ID;
 const planId = process.env.PLAN_ID;
 const authSecret = process.env.AUTH_SECRET;
 const pbCred = process.env.PB_CRED;
@@ -40,7 +41,6 @@ exports.auth = (req, res, next) => {
   const token = req.headers.authorization;
   const userId = req.headers.userid;
   const getFamilyURL = checkFamilyURL + userId;
-  
 
   axios
     .get(updateSubscriberURL + userId, {
@@ -83,7 +83,102 @@ exports.auth = (req, res, next) => {
     });
 };
 
-//Create a new subscription and get id
+//Create a new subscription with free trial and get id
+exports.createTrial = (req, res, next) => {
+  const authToken = req.headers.authorization;
+  jwt.verify(authToken, authSecret, (err, decoded) => {
+    const pbToken = decoded.token;
+    const familyId = decoded.userId;
+    if (!err) {
+      const createSubsription = async () => {
+        axios({
+          method: "post",
+          url: paypalTokenURL,
+          data: "grant_type=client_credentials",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept-Language": "en_US",
+          },
+          auth: {
+            username: clientId,
+            password: secret,
+          },
+        })
+          .then((response) => {
+            console.log(response.data.access_token);
+            const token = response.data.access_token;
+            logger.info(`token swap`);
+            axios
+              .post(
+                subscriptionURL,
+                {
+                  plan_id: trialPlanId,
+                },
+                {
+                  headers: {
+                    Accept: "application/json",
+                    Authorization: "Bearer " + token,
+                  },
+                }
+              )
+              .then((response) => {
+                console.log(response.data);
+                logger.info(`new subscription created`);
+                axios
+                  .patch(
+                    updateSubscriberURL + familyId + "/update",
+                    {
+                      subscriberId: response.data.id,
+                    },
+                    {
+                      headers: {
+                        Authorization: pbToken,
+                        "Subsvr-Creds": pbCred,
+                        "Subsvr-Auth": pbAuth,
+                      },
+                    }
+                  )
+                  .then((response) => {
+                    console.log(response.data);
+                    logger.info(`PB updated`);
+                  })
+                  .catch((error) => {
+                    console.log(error.response);
+                    logger.info(`PB error`);
+                  });
+                res.send({
+                  status: response.data.status,
+                  subscriptionId: response.data.id,
+                  link: response.data.links[0].href,
+                });
+              })
+              .catch((error) => {
+                console.log(error.response);
+                logger.info(`subscription creation error`);
+                res.send({
+                  status: error.response.status,
+                  error: error.response.statusText,
+                });
+              });
+          })
+          .catch((error) => {
+            console.log(error.response);
+            logger.info(`subscription creation error`);
+            res.send({
+              status: error.response.status,
+              error: error.response.statusText,
+            });
+          });
+      };
+      createSubsription();
+    } else {
+      throw new Error(res.status(401).send("Token not valid"));
+    }
+  });
+};
+
+//Create a new subscription with free trial and get id
 exports.create = (req, res, next) => {
   const authToken = req.headers.authorization;
   jwt.verify(authToken, authSecret, (err, decoded) => {
@@ -174,7 +269,6 @@ exports.create = (req, res, next) => {
       createSubsription();
     } else {
       throw new Error(res.status(401).send("Token not valid"));
-      
     }
   });
 };
@@ -219,16 +313,14 @@ exports.status = (req, res, next) => {
                 })
                 .then((response) => {
                   console.log(response.data);
-                  
-                    
-                  
+
                   const activeFrom = moment
                     .utc(response.data.create_time)
                     .local()
                     .format("YYYY-MM-DDTHH:mm:ss");
                   const status = response.data.status;
                   const subscriberId = response.data.id;
-                  
+
                   if (response.data.status !== "APPROVAL_PENDING") {
                     const nextBilling = moment
                       .utc(response.data.billing_info.next_billing_time)
@@ -247,8 +339,12 @@ exports.status = (req, res, next) => {
                             response.data.status == "ACTIVE" ? true : false,
                           subscriberId: response.data.id,
                           planId: response.data.plan_id,
-                          emailAddress: response.data.status == "ACTIVE" ? response.data.subscriber.email_address : "",
-                          nextBillingTime: response.data.status == "ACTIVE" ? nextBilling : "",
+                          emailAddress:
+                            response.data.status == "ACTIVE"
+                              ? response.data.subscriber.email_address
+                              : "",
+                          nextBillingTime:
+                            response.data.status == "ACTIVE" ? nextBilling : "",
                           activeFrom: activeFrom,
                         },
                         {
@@ -266,7 +362,7 @@ exports.status = (req, res, next) => {
                           status: status,
                           subscriptionId: subscriberId,
                           nextBill: nextBillingClient,
-                          trial: response.data.trial
+                          trial: response.data.trial,
                         });
                       })
                       .catch((error) => {
@@ -274,13 +370,31 @@ exports.status = (req, res, next) => {
                         logger.info(`error updating model`);
                       });
                   } else {
-                    res.send({
-                      status: status,
-                      
-                    });
-                  }
+                    axios
+                      .get(
+                        updateSubscriberURL + familyId,
 
-                  
+                        {
+                          headers: {
+                            Authorization: pbToken,
+                            "Subsvr-Creds": pbCred,
+                            "Subsvr-Auth": pbAuth,
+                          },
+                        }
+                      )
+                      .then((response) => {
+                        console.log(response.data);
+                        logger.info(`getting model`);
+                        res.send({
+                          status: status,
+                          trial: response.data.trial,
+                        });
+                      })
+                      .catch((error) => {
+                        console.log(error.response);
+                        logger.info(`error getting model`);
+                      });
+                  }
                 })
                 .catch((error) => {
                   console.log(error);
@@ -371,7 +485,6 @@ exports.cancel = (req, res, next) => {
                   res.send({
                     status: "canceled",
                   });
-                  
                 });
             })
             .catch((error) => {

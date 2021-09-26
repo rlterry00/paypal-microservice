@@ -6,7 +6,16 @@ module.exports = function (app) {
   app.post("/sub/api/pennybankplus/auth", paypalControllers.auth);
 
   //Create a new subscription and get id
-  app.post("/sub/api/pennybankplus/create/subscription", paypalControllers.create);
+  app.post(
+    "/sub/api/pennybankplus/create/subscription",
+    paypalControllers.create
+  );
+
+  //Create a new subscription with free trial and get id
+  app.post(
+    "/sub/api/pennybankplus/create/trial/subscription",
+    paypalControllers.createTrial
+  );
 
   //Check status of a subscription by id
   app.post(
