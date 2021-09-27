@@ -346,6 +346,7 @@ exports.status = (req, res, next) => {
                           nextBillingTime:
                             response.data.status == "ACTIVE" ? nextBilling : "",
                           activeFrom: activeFrom,
+                          trial: true
                         },
                         {
                           headers: {
