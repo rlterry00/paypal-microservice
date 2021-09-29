@@ -75,6 +75,9 @@ exports.auth = (req, res, next) => {
       console.log(error);
       // throw new Error(res.status(401).send("Token not valid"));
       logger.info(`error no subscription id`);
+      const authToken = jwt.sign({ token: token, userId: userId }, authSecret, {
+        expiresIn: 600,
+      });
       res.send({
         status: 404,
         authToken: authToken,
