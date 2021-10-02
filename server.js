@@ -7,7 +7,7 @@ const morgan = require("morgan");
 var cors = require("cors");
 var express = require("express");
 const https = require("https");
-const devcert = require("devcert");
+
 const path = require("path");
 const app = express();
 port = process.env.PORT || 3000;
@@ -85,13 +85,3 @@ app.listen(port, () => {
 });
 
 
-// const startServer = async () => {
-//   let ssl = await devcert.certificateFor("localhost");
-
-//   const server = https.createServer(ssl, app);
-
-//   server.listen(port, () => {
-//     console.log("listening on " + port);
-//   });
-// };
-// startServer();
