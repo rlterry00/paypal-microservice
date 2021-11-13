@@ -338,20 +338,38 @@ exports.status = (req, res, next) => {
                     axios
                       .patch(
                         updateSubscriberURL + familyId + "/update",
-                        {
-                          active:
-                            response.data.status == "ACTIVE" ? true : false,
-                          subscriberId: response.data.id,
-                          planId: response.data.plan_id,
-                          emailAddress:
-                            response.data.status == "ACTIVE"
-                              ? response.data.subscriber.email_address
-                              : "",
-                          nextBillingTime:
-                            response.data.status == "ACTIVE" ? nextBilling : "",
-                          activeFrom: activeFrom,
-                          trial: true
-                        },
+                        nextBilling
+                          ? {
+                              active:
+                                response.data.status == "ACTIVE" ? true : false,
+                              subscriberId: response.data.id,
+                              planId: response.data.plan_id,
+                              emailAddress:
+                                response.data.status == "ACTIVE"
+                                  ? response.data.subscriber.email_address
+                                  : "",
+                              nextBillingTime:
+                                response.data.status == "ACTIVE"
+                                  ? nextBilling
+                                  : "",
+                              activeFrom: activeFrom,
+                              trial: true,
+                            }
+                          : {
+                              active:
+                                response.data.status == "ACTIVE" ? true : false,
+                              subscriberId: response.data.id,
+                              planId: response.data.plan_id,
+                              emailAddress:
+                                response.data.status == "ACTIVE"
+                                  ? response.data.subscriber.email_address
+                                  : "",
+                              nextBillingTime:
+                                response.data.status == "ACTIVE"
+                                  ? nextBilling
+                                  : "",
+                              activeFrom: activeFrom,
+                            },
                         {
                           headers: {
                             Authorization: pbToken,
