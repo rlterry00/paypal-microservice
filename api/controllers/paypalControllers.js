@@ -353,7 +353,7 @@ exports.status = (req, res, next) => {
                                   ? nextBilling
                                   : "",
                               activeFrom: activeFrom,
-                              trial: false,
+                              trial: true,
                             }
                           : {
                               active:
