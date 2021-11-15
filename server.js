@@ -14,7 +14,9 @@ port = process.env.PORT || 3000;
 const { createLogger, transports } = require("winston");
 require("winston-daily-rotate-file");
 
-
+if (process.env.NODE_ENV === "production") {
+  console.log = function () {};
+}
 
 const logger = createLogger({
   level: "info",
