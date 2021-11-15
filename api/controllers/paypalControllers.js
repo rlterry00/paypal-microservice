@@ -74,7 +74,9 @@ exports.auth = (req, res, next) => {
     .catch((error) => {
       console.log(error);
       // throw new Error(res.status(401).send("Token not valid"));
-      logger.info(`this is a penny bank error finding subscription. subscription may exist.`);
+      logger.info(
+        `this is a penny bank error finding subscription. subscription may exist.`
+      );
       const authToken = jwt.sign({ token: token, userId: userId }, authSecret, {
         expiresIn: 600,
       });
@@ -338,38 +340,20 @@ exports.status = (req, res, next) => {
                     axios
                       .patch(
                         updateSubscriberURL + familyId + "/update",
-                        nextBilling
-                          ? {
-                              active:
-                                response.data.status == "ACTIVE" ? true : false,
-                              subscriberId: response.data.id,
-                              planId: response.data.plan_id,
-                              emailAddress:
-                                response.data.status == "ACTIVE"
-                                  ? response.data.subscriber.email_address
-                                  : "",
-                              nextBillingTime:
-                                response.data.status == "ACTIVE"
-                                  ? nextBilling
-                                  : "",
-                              activeFrom: activeFrom,
-                              trial: true,
-                            }
-                          : {
-                              active:
-                                response.data.status == "ACTIVE" ? true : false,
-                              subscriberId: response.data.id,
-                              planId: response.data.plan_id,
-                              emailAddress:
-                                response.data.status == "ACTIVE"
-                                  ? response.data.subscriber.email_address
-                                  : "",
-                              nextBillingTime:
-                                response.data.status == "ACTIVE"
-                                  ? nextBilling
-                                  : "",
-                              activeFrom: activeFrom,
-                            },
+                        {
+                          active:
+                            response.data.status == "ACTIVE" ? true : false,
+                          subscriberId: response.data.id,
+                          planId: response.data.plan_id,
+                          emailAddress:
+                            response.data.status == "ACTIVE"
+                              ? response.data.subscriber.email_address
+                              : "",
+                          nextBillingTime:
+                            response.data.status == "ACTIVE" ? nextBilling : "",
+                          activeFrom: activeFrom,
+                          trial: true,
+                        },
                         {
                           headers: {
                             Authorization: pbToken,
