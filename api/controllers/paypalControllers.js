@@ -55,19 +55,19 @@ exports.auth = (req, res, next) => {
       const authToken = jwt.sign({ token: token, userId: userId }, authSecret, {
         expiresIn: 600,
       });
-      if (response.data.subscriberId) {
-        logger.info(`successful auth`);
+      if (response.data.subscriberId && response.data.nextBillingTime) {
+        logger.info(`successful auth with at least one billig cycle`);
         res.send({
           status: 200,
           authToken: authToken,
           subscription: response.data.subscriberId,
         });
       } else {
-        logger.info(`no subscription id`);
+        logger.info(`no subscription id or hasn't been activated`);
         res.send({
           status: 404,
           authToken: authToken,
-          message: "subscription id not found",
+          message: "subscription id not found or hasn't been activated",
         });
       }
     })
