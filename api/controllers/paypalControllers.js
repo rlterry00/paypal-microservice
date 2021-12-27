@@ -55,7 +55,7 @@ exports.auth = (req, res, next) => {
       const authToken = jwt.sign({ token: token, userId: userId }, authSecret, {
         expiresIn: 600,
       });
-      if (response.data.subscriberId && response.data.nextBillingTime) {
+      if (response.data.subscriberId) {
         logger.info(`successful auth with at least one billig cycle`);
         res.send({
           status: 200,
